@@ -8,6 +8,8 @@ const Group = require("./Group");
 const Classroom = require("./Classroom");
 const Schedule = require("./Schedule");
 const Attendance = require("./Attendance");
+const Note = require("./Note");
+const Device = require("./Device");
 
 
 // =========================
@@ -109,6 +111,50 @@ Attendance.belongsTo(Schedule, {
 
 
 // =========================
+// Notes (teacher -> course + group)
+// =========================
+
+Teacher.hasMany(Note, {
+    foreignKey: "teacher_id"
+});
+
+Note.belongsTo(Teacher, {
+    foreignKey: "teacher_id"
+});
+
+
+Course.hasMany(Note, {
+    foreignKey: "course_id"
+});
+
+Note.belongsTo(Course, {
+    foreignKey: "course_id"
+});
+
+
+Group.hasMany(Note, {
+    foreignKey: "group_id"
+});
+
+Note.belongsTo(Group, {
+    foreignKey: "group_id"
+});
+
+
+// =========================
+// Door camera boxes
+// =========================
+
+Classroom.hasMany(Device, {
+    foreignKey: "classroom_id"
+});
+
+Device.belongsTo(Classroom, {
+    foreignKey: "classroom_id"
+});
+
+
+// =========================
 // Export models
 // =========================
 
@@ -121,5 +167,7 @@ module.exports = {
     Group,
     Classroom,
     Schedule,
-    Attendance
+    Attendance,
+    Note,
+    Device
 };

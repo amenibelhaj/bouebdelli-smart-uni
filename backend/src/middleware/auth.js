@@ -1,46 +1,35 @@
 const jwt = require("jsonwebtoken");
 
 
+// Checks the "Authorization: Bearer <token>" header and puts { id, role } in req.user
 const authMiddleware = (req, res, next) => {
+
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({
+            message: "Veuillez vous connecter"
+        });
+    }
+
+    const [scheme, token] = authHeader.split(" ");
+
+    if (scheme !== "Bearer" || !token) {
+        return res.status(401).json({
+            message: "Format du jeton invalide"
+        });
+    }
 
     try {
 
-        const authHeader = req.headers.authorization;
-
-
-        if (!authHeader) {
-            return res.status(401).json({
-                message: "No token provided"
-            });
-        }
-
-
-        const token = authHeader.split(" ")[1];
-
-
-        if (!token) {
-            return res.status(401).json({
-                message: "Invalid token format"
-            });
-        }
-
-
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET
-        );
-
-
-        req.user = decoded;
-
+        req.user = jwt.verify(token, process.env.JWT_SECRET);
 
         next();
-
 
     } catch (error) {
 
         return res.status(401).json({
-            message: "Invalid token"
+            message: "Session expirée, veuillez vous reconnecter"
         });
 
     }
