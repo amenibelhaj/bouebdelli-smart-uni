@@ -24,20 +24,17 @@ export default function Login() {
 
     return (
         <div className="login">
-            <section className="login-side" aria-hidden="true">
-                <div className="door">
-                    <div className="door-arch" />
-                    <div className="door-plate-big">B6</div>
-                </div>
+            <section className="login-side">
+                <img src="/logo.png" alt="Bouebdelli University" className="login-logo" />
                 <p className="login-tagline">
                     La présence se fait à la porte.<br />
-                    Le reste, ici.
+                    <span>Le reste, ici.</span>
                 </p>
             </section>
 
             <section className="login-main">
                 <form className="login-form" onSubmit={submit}>
-                    <span className="brand-mark large" aria-hidden="true" />
+                    <img src="/crest.png" alt="" className="brand-mark large" />
                     <h1>Bouebdelli Smart Uni</h1>
                     <p className="muted">Connectez-vous avec votre compte universitaire.</p>
 

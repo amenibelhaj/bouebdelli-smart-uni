@@ -42,7 +42,7 @@ export default function Layout({ path, children }) {
         <div className="shell">
             <aside className={`sidebar ${open ? "sidebar-open" : ""}`}>
                 <div className="brand">
-                    <span className="brand-mark" aria-hidden="true" />
+                    <img src="/crest.png" alt="" className="brand-mark" />
                     <span className="brand-name">Bouebdelli<br /><small>Smart Uni</small></span>
                     <button className="menu-toggle" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="Menu">
                         {open ? "×" : "☰"}
