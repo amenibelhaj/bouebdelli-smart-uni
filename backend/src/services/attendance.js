@@ -65,7 +65,8 @@ async function expectedPeople(schedule) {
     });
 
     return {
-        students: students.filter(s => s.User).map(s => ({
+        // Accounts not yet activated by the admin are ignored
+        students: students.filter(s => s.User && s.User.status === "active").map(s => ({
             user_id: s.user_id,
             name: s.User.name,
             student_number: s.student_number
