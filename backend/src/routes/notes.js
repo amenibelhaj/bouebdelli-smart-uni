@@ -10,13 +10,28 @@ const {
     Schedule,
     Course,
     Group,
-    User
+    User,
+    NoteFile
 } = require("../models");
 
 const authMiddleware = require("../middleware/auth");
 const roleMiddleware = require("../middleware/role");
 const HttpError = require("../utils/httpError");
-const { saveAttachment, deleteAttachment, attachmentPath } = require("../utils/files");
+const { DB_MARKER, readAttachment, deleteAttachment, attachmentPath } = require("../utils/files");
+
+
+// Removes a note's current attachment, wherever it is stored
+async function removeAttachment(note) {
+    if (note.file_path === DB_MARKER) {
+        await NoteFile.destroy({ where: { note_id: note.id } });
+    } else {
+        deleteAttachment(note.file_path);
+    }
+
+    note.file_path = null;
+    note.file_name = null;
+    note.file_type = null;
+}
 
 
 const noteIncludes = [
@@ -144,7 +159,7 @@ router.post(
             throw new HttpError(403, "Vous n'enseignez pas cette matière à ce groupe");
         }
 
-        const attachment = file ? saveAttachment(file) : {};
+        const attachment = file ? readAttachment(file) : null;
 
         const note = await Note.create({
             teacher_id: teacher.id,
@@ -153,8 +168,12 @@ router.post(
             title: String(title).trim(),
             message: message || null,
             deadline: parseDeadline(deadline) ?? null,
-            ...attachment
+            ...(attachment ? attachment.meta : {})
         });
+
+        if (attachment) {
+            await NoteFile.create({ note_id: note.id, data: attachment.buffer });
+        }
 
         res.status(201).json({
             message: "Note publiée",
@@ -192,15 +211,15 @@ router.put(
             note.deadline = parsedDeadline;
         }
 
-        if (file || remove_file) {
-            deleteAttachment(note.file_path);
-            note.file_path = null;
-            note.file_name = null;
-            note.file_type = null;
+        const attachment = file ? readAttachment(file) : null;
+
+        if (attachment || remove_file) {
+            await removeAttachment(note);
         }
 
-        if (file) {
-            Object.assign(note, saveAttachment(file));
+        if (attachment) {
+            Object.assign(note, attachment.meta);
+            await NoteFile.create({ note_id: note.id, data: attachment.buffer });
         }
 
         await note.save();
@@ -225,7 +244,7 @@ router.delete(
 
         const note = await editableNote(req);
 
-        deleteAttachment(note.file_path);
+        await removeAttachment(note);
         await note.destroy();
 
         res.json({ message: "Note supprimée" });
@@ -263,13 +282,29 @@ router.get("/:id/file", authMiddleware, async (req, res) => {
         }
     }
 
+    const name = note.file_name || "fichier";
+
+    if (note.file_path === DB_MARKER) {
+
+        const stored = await NoteFile.findByPk(note.id);
+
+        if (!stored) {
+            throw new HttpError(404, "Fichier introuvable");
+        }
+
+        res.attachment(name);
+        res.type(note.file_type || "application/octet-stream");
+        return res.send(stored.data);
+    }
+
+    // Older files stored on disk
     const fullPath = attachmentPath(note.file_path);
 
     if (!fs.existsSync(fullPath)) {
         throw new HttpError(404, "Fichier introuvable sur le serveur");
     }
 
-    res.download(fullPath, note.file_name || "fichier");
+    res.download(fullPath, name);
 });
 
 

@@ -33,9 +33,9 @@ A camera box is mounted at the door of each classroom. When a student or teacher
                             and marks present  that class only
 ```
 
-1. The admin registers 2–3 photos of each person. The AI service turns each face into a 128-number signature (only signatures are stored, not photos).
+1. Each person registers 2–3 photos (at first login, or by the admin). The AI service turns each face into a 128-number signature, stored in the database (photos are never stored).
 2. The box (`ai-service/door_box.py`) watches the door. When a face is close, it sends a photo to the backend with its secret device key.
-3. The backend knows which classroom the box is in, finds the class taking place there now (check-in opens 15 minutes before), and asks the AI service who it is, comparing only with the students of that group and the teacher.
+3. The backend knows which classroom the box is in, finds the class taking place there now (check-in opens 15 minutes before), gets the face signature from the AI service and compares it only with the students of that group and the teacher.
 4. A match marks the person present. Every minute, the backend marks absent everyone who missed a class that has ended.
 
 For the demo the box runs on a laptop webcam; in production the same script runs on a small computer with a camera (e.g. Raspberry Pi) at each door.
@@ -127,6 +127,10 @@ cd ai-service
 python door_box.py --key demo-key-b6              # webcam
 python door_box.py --key demo-key-b6 --image photo.jpg   # or send one photo
 ```
+
+## Deploy online (free)
+
+Database on **Neon**, API + face recognition on **Render** (one Docker service, see `render.yaml`), website on **Vercel**. Step-by-step guide: **[docs/deploy.md](docs/deploy.md)**.
 
 ## Project structure
 

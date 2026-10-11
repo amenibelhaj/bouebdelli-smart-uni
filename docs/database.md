@@ -24,6 +24,8 @@ users ─┬─ students ── groups ─┬─ schedules ─┬─ attendance
 | `attendance` | One row per person, class and date: `present` or `absent`, and the recognition `confidence` for camera check-ins |
 | `notes` | Teacher notes for a course and a group: title, message, optional deadline and attached file |
 | `devices` | Camera boxes: name, classroom, secret `api_key`, active, last seen |
+| `face_signatures` | Registered faces: `user_id` + a 128-number signature per photo (max 5 per person, photos are not stored) |
+| `note_files` | Content of the file attached to a note (`note_id` + binary data) |
 
 ## Rules
 

@@ -19,7 +19,7 @@ const {
 const authMiddleware = require("../middleware/auth");
 const roleMiddleware = require("../middleware/role");
 const { toDateString, dayName, timeToMinutes, minutesNow } = require("../utils/time");
-const { expectedPeople } = require("../services/attendance");
+const { expectedPeople, finalizeEndedSessions } = require("../services/attendance");
 
 
 function rate(present, absent) {
@@ -247,6 +247,10 @@ router.get(
     async (req, res) => {
 
         const today = toDateString();
+
+        // Make sure classes that already ended today have their absences
+        // (the background job does not run while a free hosting instance sleeps)
+        await finalizeEndedSessions().catch(() => {});
 
         const [
             students,

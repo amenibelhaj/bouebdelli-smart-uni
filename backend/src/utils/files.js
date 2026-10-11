@@ -4,11 +4,13 @@
 
 const fs = require("fs");
 const path = require("path");
-const crypto = require("crypto");
 const HttpError = require("./httpError");
 
 const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads");
 const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+// file_path value meaning "the content is in the note_files table"
+const DB_MARKER = "db";
 
 const ALLOWED_TYPES = {
     "application/pdf": ".pdf",
@@ -38,8 +40,10 @@ function decodeDataUrl(dataUrl) {
     };
 }
 
-// Saves an uploaded note attachment and returns its metadata
-function saveAttachment(file) {
+// Checks an uploaded note attachment and returns its metadata and content.
+// The content is stored in the database (note_files table), not on disk,
+// so it survives restarts on hosting platforms with a temporary disk.
+function readAttachment(file) {
     if (!file || !file.data) {
         throw new HttpError(400, "Fichier manquant");
     }
@@ -55,22 +59,22 @@ function saveAttachment(file) {
         throw new HttpError(400, "Fichier trop volumineux (10 Mo maximum)");
     }
 
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-    const storedName = crypto.randomUUID() + extension;
-    fs.writeFileSync(path.join(UPLOAD_DIR, storedName), buffer);
-
     const originalName = path.basename(String(file.name || "fichier" + extension)).slice(0, 200);
 
     return {
-        file_path: storedName,
-        file_name: originalName,
-        file_type: mime
+        meta: {
+            file_path: DB_MARKER,
+            file_name: originalName,
+            file_type: mime
+        },
+        buffer
     };
 }
 
+// Removes an old attachment stored on disk (files uploaded before the
+// database storage was introduced)
 function deleteAttachment(storedName) {
-    if (!storedName) return;
+    if (!storedName || storedName === DB_MARKER) return;
 
     const fullPath = path.join(UPLOAD_DIR, path.basename(storedName));
 
@@ -82,8 +86,9 @@ function attachmentPath(storedName) {
 }
 
 module.exports = {
+    DB_MARKER,
     decodeDataUrl,
-    saveAttachment,
+    readAttachment,
     deleteAttachment,
     attachmentPath
 };

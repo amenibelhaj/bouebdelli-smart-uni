@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 
 const { User, Student, Teacher, Group } = require("../models");
 const authMiddleware = require("../middleware/auth");
-const ai = require("../services/aiClient");
+const ai = require("../services/faces");
 
 
 // =========================

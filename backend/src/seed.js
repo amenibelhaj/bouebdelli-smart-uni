@@ -2,6 +2,9 @@
 //
 //   npm run seed        -> DELETES ALL DATA, recreates the tables and inserts demo data
 //
+// On a hosting platform, AUTO_SEED=true runs it automatically the first time
+// the server starts with an empty database (see server.js).
+//
 // Every demo account uses the password: password123
 
 require("dotenv").config();
@@ -29,8 +32,6 @@ const PASSWORD = "password123";
 
 
 async function seed() {
-
-    await sequelize.authenticate();
 
     // Drop and recreate every table
     await sequelize.sync({ force: true });
@@ -258,9 +259,15 @@ async function seed() {
 }
 
 
-seed()
-    .then(() => sequelize.close())
-    .catch(error => {
-        console.error("Seed failed:", error.message);
-        process.exit(1);
-    });
+module.exports = seed;
+
+
+if (require.main === module) {
+    sequelize.authenticate()
+        .then(seed)
+        .then(() => sequelize.close())
+        .catch(error => {
+            console.error("Seed failed:", error.message);
+            process.exit(1);
+        });
+}

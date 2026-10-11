@@ -31,19 +31,10 @@ PORT = int(os.environ.get("AI_PORT", "8000"))
 # Shared secret with the backend (AI_SERVICE_KEY in backend/.env)
 API_KEY = os.environ.get("AI_SERVICE_KEY", "")
 
-# Cosine similarity needed to accept a match (OpenCV recommends 0.363 for SFace).
-# Higher = stricter (fewer false matches, but more "not recognized").
-MATCH_THRESHOLD = float(os.environ.get("FACE_MATCH_THRESHOLD", "0.40"))
-
 MODELS_DIR = os.path.join(BASE_DIR, "models")
-DATA_DIR = os.path.join(BASE_DIR, "data")
-FACES_FILE = os.path.join(DATA_DIR, "faces.json")
 
 DETECTOR_MODEL = os.path.join(MODELS_DIR, "face_detection_yunet_2023mar.onnx")
 RECOGNIZER_MODEL = os.path.join(MODELS_DIR, "face_recognition_sface_2021dec.onnx")
-
-# Keep at most this many photos per person
-MAX_PHOTOS_PER_PERSON = 5
 
 
 # --- Door box (door_box.py) ---

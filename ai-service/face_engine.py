@@ -3,13 +3,11 @@
 - Detection: YuNet  (finds faces in a photo)
 - Recognition: SFace (turns a face into a 128-number "signature" / embedding)
 
-Two photos of the same person give signatures that point in almost the same
-direction, so we compare them with cosine similarity (1.0 = identical).
-Only the signatures are stored, never the photos.
+This module only computes signatures. Storing and comparing them is done by
+the backend, in the database. Photos are never stored.
 """
 
 import base64
-import json
 import os
 import threading
 
@@ -26,7 +24,6 @@ class FaceError(Exception):
 _detector = None
 _recognizer = None
 _models_lock = threading.Lock()
-_store_lock = threading.Lock()
 
 
 def models_ready():
@@ -105,106 +102,34 @@ def signature(image, face):
     return feature / (np.linalg.norm(feature) + 1e-10)
 
 
-# ---------- Storage (data/faces.json: {"user_id": [[128 numbers], ...]}) ----------
+# ---------- Public function used by the API ----------
 
-def _load_store():
-    if not os.path.exists(config.FACES_FILE):
-        return {}
+def embed(image_data, mode="detect"):
+    """Turns a photo into a face signature.
 
-    with open(config.FACES_FILE, encoding="utf-8") as f:
-        return json.load(f)
-
-
-def _save_store(store):
-    os.makedirs(config.DATA_DIR, exist_ok=True)
-    temp = config.FACES_FILE + ".tmp"
-
-    with open(temp, "w", encoding="utf-8") as f:
-        json.dump(store, f)
-
-    os.replace(temp, config.FACES_FILE)
-
-
-def list_faces():
-    with _store_lock:
-        return {user_id: len(sigs) for user_id, sigs in _load_store().items()}
-
-
-def enroll(user_id, image_data):
-    """Adds a photo of a person. The photo must contain exactly one clear face."""
-    image = decode_image(image_data)
-    faces = detect_faces(image)
-
-    if len(faces) == 0:
-        raise FaceError("Aucun visage détecté sur la photo")
-
-    if len(faces) > 1:
-        raise FaceError("Plusieurs visages détectés : une seule personne doit apparaître sur la photo")
-
-    face = faces[0]
-
-    if min(face[2], face[3]) < 60:
-        raise FaceError("Visage trop petit : prenez une photo plus rapprochée")
-
-    sig = signature(image, face)
-
-    with _store_lock:
-        store = _load_store()
-        sigs = store.get(str(user_id), [])
-        sigs.append([round(float(x), 6) for x in sig])
-        store[str(user_id)] = sigs[-config.MAX_PHOTOS_PER_PERSON:]
-        _save_store(store)
-
-        return len(store[str(user_id)])
-
-
-def delete(user_id):
-    with _store_lock:
-        store = _load_store()
-        removed = store.pop(str(user_id), None) is not None
-        _save_store(store)
-        return removed
-
-
-def identify(image_data, candidates=None):
-    """Finds who is in the photo.
-
-    candidates: optional list of user ids to compare against (e.g. the students of
-    the class happening now). Returns a dict with match, user_id, confidence.
+    mode "enroll": the photo must contain exactly one, large enough face (FaceError otherwise).
+    mode "detect": uses the biggest face (the person closest to the camera), if any.
+    Returns {"signature": [128 floats] or None, "faces_detected": n}.
     """
     image = decode_image(image_data)
     faces = detect_faces(image)
 
-    result = {"match": False, "user_id": None, "confidence": None, "faces_detected": len(faces)}
+    if mode == "enroll":
+        if len(faces) == 0:
+            raise FaceError("Aucun visage détecté sur la photo")
+
+        if len(faces) > 1:
+            raise FaceError("Plusieurs visages détectés : une seule personne doit apparaître sur la photo")
+
+        if min(faces[0][2], faces[0][3]) < 60:
+            raise FaceError("Visage trop petit : prenez une photo plus rapprochée")
 
     if not faces:
-        return result
+        return {"signature": None, "faces_detected": 0}
 
-    sig = signature(image, faces[0])  # the biggest face = the person closest to the camera
+    sig = signature(image, faces[0])
 
-    with _store_lock:
-        store = _load_store()
-
-    if candidates is not None:
-        allowed = {str(c) for c in candidates}
-        store = {uid: sigs for uid, sigs in store.items() if uid in allowed}
-
-    best_user, best_score = None, -1.0
-
-    for user_id, sigs in store.items():
-        if not sigs:
-            continue
-        score = float(np.max(np.asarray(sigs, dtype=np.float32) @ sig))
-        if score > best_score:
-            best_user, best_score = user_id, score
-
-    if best_user is None:
-        return result
-
-    result["confidence"] = round(best_score, 3)
-
-    if best_score >= config.MATCH_THRESHOLD:
-        result["match"] = True
-        result["user_id"] = int(best_user)
-
-    return result
+    return {
+        "signature": [round(float(x), 6) for x in sig],
+        "faces_detected": len(faces),
+    }

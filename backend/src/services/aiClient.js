@@ -1,27 +1,35 @@
-// Talks to the Python face recognition service (ai-service/app.py)
+// Talks to the Python face service (ai-service/app.py).
+// The service only turns a photo into a face signature; storing and comparing
+// signatures is done here, in the database (see services/faces.js).
 
 const HttpError = require("../utils/httpError");
 
 
 function baseUrl() {
-    return (process.env.AI_SERVICE_URL || "http://localhost:8000").replace(/\/$/, "");
+    let url = (process.env.AI_SERVICE_URL || "http://localhost:8000").replace(/\/$/, "");
+    if (!/^https?:\/\//.test(url)) url = "https://" + url;
+    return url;
 }
 
 
-async function call(path, options = {}) {
+// mode "enroll": the photo must contain exactly one clear face (error otherwise)
+// mode "detect": uses the biggest face, or returns signature null if there is none
+// Returns { signature: number[] | null, faces_detected }
+async function embed(image, mode) {
 
     let response;
 
     try {
 
-        response = await fetch(baseUrl() + path, {
-            ...options,
+        response = await fetch(baseUrl() + "/embed", {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "x-api-key": process.env.AI_SERVICE_KEY || "",
-                ...(options.headers || {})
+                "x-api-key": process.env.AI_SERVICE_KEY || ""
             },
-            signal: AbortSignal.timeout(20000)
+            body: JSON.stringify({ image, mode }),
+            // generous: a free hosting instance may need time to wake up
+            signal: AbortSignal.timeout(60000)
         });
 
     } catch (error) {
@@ -43,41 +51,4 @@ async function call(path, options = {}) {
 }
 
 
-// image: data URL or raw base64 of a JPEG/PNG photo
-function enrollFace(userId, image) {
-    return call(`/faces/${userId}`, {
-        method: "POST",
-        body: JSON.stringify({ image })
-    });
-}
-
-function deleteFaces(userId) {
-    return call(`/faces/${userId}`, {
-        method: "DELETE"
-    });
-}
-
-// Returns { user_id: number_of_photos, ... }
-async function listFaces() {
-    const data = await call("/faces");
-    return data.faces || {};
-}
-
-// Returns { match, user_id, confidence, faces_detected }
-function identify(image, candidateUserIds) {
-    return call("/identify", {
-        method: "POST",
-        body: JSON.stringify({
-            image,
-            candidates: candidateUserIds
-        })
-    });
-}
-
-
-module.exports = {
-    enrollFace,
-    deleteFaces,
-    listFaces,
-    identify
-};
+module.exports = { embed };

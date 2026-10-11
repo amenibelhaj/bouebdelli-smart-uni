@@ -10,6 +10,8 @@ const Schedule = require("./Schedule");
 const Attendance = require("./Attendance");
 const Note = require("./Note");
 const Device = require("./Device");
+const FaceSignature = require("./FaceSignature");
+const NoteFile = require("./NoteFile");
 
 
 // =========================
@@ -155,6 +157,30 @@ Device.belongsTo(Classroom, {
 
 
 // =========================
+// Face signatures and note files
+// =========================
+
+User.hasMany(FaceSignature, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE"
+});
+
+FaceSignature.belongsTo(User, {
+    foreignKey: "user_id"
+});
+
+
+Note.hasOne(NoteFile, {
+    foreignKey: "note_id",
+    onDelete: "CASCADE"
+});
+
+NoteFile.belongsTo(Note, {
+    foreignKey: "note_id"
+});
+
+
+// =========================
 // Export models
 // =========================
 
@@ -169,5 +195,7 @@ module.exports = {
     Schedule,
     Attendance,
     Note,
-    Device
+    Device,
+    FaceSignature,
+    NoteFile
 };

@@ -24,7 +24,7 @@ const {
 const authMiddleware = require("../middleware/auth");
 const roleMiddleware = require("../middleware/role");
 const HttpError = require("../utils/httpError");
-const ai = require("../services/aiClient");
+const ai = require("../services/faces");
 
 
 router.use(authMiddleware, roleMiddleware("admin"));

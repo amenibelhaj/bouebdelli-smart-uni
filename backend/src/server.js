@@ -7,7 +7,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = require("./app");
-const { sequelize } = require("./models");
+const { sequelize, User } = require("./models");
 const { startAbsenceJob } = require("./services/attendance");
 
 const PORT = process.env.PORT || 5000;
@@ -23,6 +23,12 @@ async function startServer() {
         // Creates missing tables (does not change existing ones)
         await sequelize.sync();
         console.log("Database synchronized");
+
+        // First start on a hosting platform: fill the empty database with demo data
+        if (process.env.AUTO_SEED === "true" && await User.count() === 0) {
+            console.log("Empty database: creating demo data...");
+            await require("./seed")();
+        }
 
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);

@@ -11,8 +11,25 @@ const noteRoutes = require("./routes/notes");
 const adminRoutes = require("./routes/admin");
 
 
+// Allowed frontend addresses, comma-separated. An entry like https://*.vercel.app
+// allows every subdomain (useful for Vercel preview links).
+const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean);
+
+function originAllowed(origin) {
+    return allowedOrigins.some(allowed => {
+        if (allowed === "*") return true;
+        if (!allowed.includes("*")) return allowed === origin;
+
+        const [scheme, host] = allowed.split("://*");
+        return origin.startsWith(scheme + "://") && origin.endsWith(host);
+    });
+}
+
 app.use(cors({
-    origin: (process.env.CORS_ORIGIN || "http://localhost:5173").split(",").map(s => s.trim())
+    origin: (origin, callback) => callback(null, !origin || originAllowed(origin))
 }));
 
 // 15 MB: files and photos are sent as base64 inside JSON

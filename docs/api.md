@@ -74,12 +74,9 @@ Errors always look like `{ "message": "..." }` (in French, ready to display).
 
 ## AI service (internal, port 8000)
 
-Called only by the backend, with header `x-api-key`.
+Called only by the backend, with header `x-api-key`. It stores nothing.
 
 | Method | Route | Description |
 |---|---|---|
 | GET | `/health` | Status, models loaded |
-| GET | `/faces` | Registered people |
-| POST | `/faces/<user_id>` | `{ image }` — add a photo (exactly one face) |
-| DELETE | `/faces/<user_id>` | Forget a person |
-| POST | `/identify` | `{ image, candidates? }` → `{ match, user_id, confidence, faces_detected }` |
+| POST | `/embed` | `{ image, mode }` → `{ signature, faces_detected }`. `mode: "enroll"` requires exactly one clear face; `mode: "detect"` uses the biggest face (or `signature: null`) |

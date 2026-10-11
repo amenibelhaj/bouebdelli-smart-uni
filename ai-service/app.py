@@ -1,15 +1,16 @@
-"""Face recognition API used by the backend.
+"""Face signature API used by the backend.
 
 Run:  python app.py      (listens on http://127.0.0.1:8000)
 
 Every request must send the header  x-api-key: <AI_SERVICE_KEY>
 Only the backend talks to this service; the browser and the door boxes never do.
 
-GET    /health              -> service status
-GET    /faces               -> {"faces": {"user_id": number_of_photos}}
-POST   /faces/<user_id>     body {"image": "<base64 or data URL>"} -> register a photo
-DELETE /faces/<user_id>     -> forget a person
-POST   /identify            body {"image": ..., "candidates": [ids]} -> who is it?
+GET  /health   -> service status
+POST /embed    body {"image": "<base64 or data URL>", "mode": "enroll" | "detect"}
+               -> {"signature": [128 numbers] or null, "faces_detected": n}
+
+The service stores nothing: the backend keeps the signatures in the database
+and does the comparison.
 """
 
 import hmac
@@ -67,32 +68,15 @@ def health():
     return jsonify(status="OK", models_ready=face_engine.models_ready())
 
 
-@app.get("/faces")
-def list_faces():
-    return jsonify(faces=face_engine.list_faces())
-
-
-@app.post("/faces/<int:user_id>")
-def enroll(user_id):
-    photos = face_engine.enroll(user_id, body().get("image"))
-    return jsonify(message="Photo enregistrée", user_id=user_id, photos=photos)
-
-
-@app.delete("/faces/<int:user_id>")
-def delete(user_id):
-    removed = face_engine.delete(user_id)
-    return jsonify(message="Visage supprimé" if removed else "Aucun visage enregistré", removed=removed)
-
-
-@app.post("/identify")
-def identify():
+@app.post("/embed")
+def embed():
     data = body()
-    candidates = data.get("candidates")
+    mode = data.get("mode", "detect")
 
-    if candidates is not None and not isinstance(candidates, list):
-        raise FaceError("candidates doit être une liste")
+    if mode not in ("enroll", "detect"):
+        raise FaceError("mode doit être enroll ou detect")
 
-    return jsonify(face_engine.identify(data.get("image"), candidates))
+    return jsonify(face_engine.embed(data.get("image"), mode))
 
 
 if __name__ == "__main__":

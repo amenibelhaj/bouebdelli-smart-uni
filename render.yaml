@@ -1,0 +1,35 @@
+# Render Blueprint: deploys the API + face service as one free web service.
+# In Render: New > Blueprint > choose this repository. See docs/deploy.md.
+#
+# The database is not created here: use a free Neon database (permanent),
+# Render's free database is deleted after 30 days.
+
+services:
+  - type: web
+    name: bouebdelli-smart-uni-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # Neon connection string (postgresql://...?sslmode=require) — asked at creation
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AI_SERVICE_KEY
+        generateValue: true
+      # Frontend addresses allowed to call the API
+      - key: CORS_ORIGIN
+        value: https://*.vercel.app,http://localhost:5173
+      - key: TZ
+        value: Africa/Tunis
+      # Fill the empty database with the demo data on the first start
+      - key: AUTO_SEED
+        value: "true"
+      - key: CHECKIN_EARLY_MINUTES
+        value: "15"
+      - key: FACE_MATCH_THRESHOLD
+        value: "0.40"

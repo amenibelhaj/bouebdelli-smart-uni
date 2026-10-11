@@ -117,3 +117,19 @@ CREATE TABLE devices (
     active BOOLEAN NOT NULL DEFAULT TRUE,
     last_seen_at TIMESTAMPTZ
 );
+
+
+-- Registered faces: one 128-number signature per photo (photos are not stored)
+CREATE TABLE face_signatures (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    signature JSON NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL
+);
+
+
+-- Content of the file attached to a note
+CREATE TABLE note_files (
+    note_id INTEGER PRIMARY KEY REFERENCES notes(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    data BYTEA NOT NULL
+);

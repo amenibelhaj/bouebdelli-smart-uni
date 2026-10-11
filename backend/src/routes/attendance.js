@@ -17,7 +17,7 @@ const authMiddleware = require("../middleware/auth");
 const roleMiddleware = require("../middleware/role");
 const deviceMiddleware = require("../middleware/device");
 const HttpError = require("../utils/httpError");
-const ai = require("../services/aiClient");
+const ai = require("../services/faces");
 
 const {
     findCurrentSchedule,
@@ -184,6 +184,10 @@ router.get(
 
         const schedule = await scheduleForStaff(req, req.query.schedule_id);
         const people = await expectedPeople(schedule);
+
+        // Record absences for this date if the class has ended
+        // (in case the background job could not run, e.g. sleeping server)
+        await finalizeEndedSessions(date).catch(() => {});
 
         const records = await Attendance.findAll({
             where: { schedule_id: schedule.id, date }
