@@ -1,6 +1,6 @@
 // Small wrapper around fetch for the backend API.
 
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
+export const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
 
 const TOKEN_KEY = "smartuni_token";
 const USER_KEY = "smartuni_user";

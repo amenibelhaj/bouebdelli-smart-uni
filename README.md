@@ -113,14 +113,16 @@ All demo accounts use the password `password123`.
 
 1. Log in as admin → **Utilisateurs** → *Visage* → add 2–3 clear photos of yourself on a student account (e.g. Ameni).
 2. **Emploi du temps** → add a class for that student's group, today, starting now, in room **B6**.
-3. Run the door box for room B6 (its key is on the **Boîtiers caméra** page):
-   ```bash
-   cd ai-service
-   python door_box.py --key demo-key-b6
-   ```
-4. Look at the camera: the window shows *Bienvenue … — présence enregistrée*. Log in as the teacher → **Présences**: the student is present, with the recognition score.
+3. Admin → **Boîtiers caméra** → on the *Caméra porte B6* row, click **Ouvrir la caméra**, then **Démarrer la caméra** (allow the webcam). This page turns your browser into the door camera, no installation needed.
+4. Look at the camera: it shows *Bienvenue … — présence enregistrée*. Log in as the teacher → **Présences**: the student is present, with the recognition score.
 
-No webcam? Send a photo instead: `python door_box.py --key demo-key-b6 --image photo.jpg`
+On a real door box (e.g. Raspberry Pi with a camera), the same job is done by the Python program:
+
+```bash
+cd ai-service
+python door_box.py --key demo-key-b6              # webcam
+python door_box.py --key demo-key-b6 --image photo.jpg   # or send one photo
+```
 
 ## Project structure
 

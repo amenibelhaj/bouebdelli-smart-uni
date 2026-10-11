@@ -6,6 +6,7 @@ import { Empty, PageHeader } from "./components/ui";
 import Login from "./pages/Login";
 import TimetablePage from "./pages/TimetablePage";
 import AccountPage from "./pages/AccountPage";
+import DoorBox from "./pages/DoorBox";
 
 import StudentHome from "./pages/student/StudentHome";
 import StudentAbsences from "./pages/student/StudentAbsences";
@@ -54,6 +55,11 @@ function NotFound() {
 export default function App() {
     const { user } = useAuth();
     const path = useRoute();
+
+    // The door camera page works without logging in (the box uses its own key)
+    if (path === "/boitier") {
+        return <DoorBox />;
+    }
 
     if (!user) {
         return <Login />;

@@ -174,6 +174,7 @@ export default function AdminCrud({ page }) {
                                         <td className="row-actions">
                                             {page === "boitiers" && (
                                                 <>
+                                                    <a className="btn btn-small btn-primary" href={`#/boitier?key=${encodeURIComponent(item.api_key)}`} target="_blank" rel="noreferrer">Ouvrir la caméra</a>
                                                     <button className="btn btn-small btn-quiet" onClick={() => copy(item.api_key)}>Copier la clé</button>
                                                     <button className="btn btn-small btn-quiet" onClick={() => regenerate(item)}>Nouvelle clé</button>
                                                 </>
@@ -192,7 +193,8 @@ export default function AdminCrud({ page }) {
             {page === "boitiers" && (
                 <section className="panel help">
                     <h2>Lancer un boîtier</h2>
-                    <p>Sur l'ordinateur du boîtier (ou votre PC avec webcam pour la démo), dans le dossier <code>ai-service</code> :</p>
+                    <p>Pour la démo : cliquez sur « Ouvrir la caméra » sur la ligne d'un boîtier. La page utilise la webcam de cet ordinateur comme caméra de la porte.</p>
+                    <p>Sur un vrai boîtier (Raspberry Pi avec caméra), dans le dossier <code>ai-service</code> :</p>
                     <pre><code>python door_box.py --key CLÉ_DU_BOÎTIER</code></pre>
                     <p className="muted small">Le boîtier reconnaît les personnes attendues au cours qui a lieu dans sa salle à ce moment-là.</p>
                 </section>

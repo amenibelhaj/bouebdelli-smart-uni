@@ -1202,3 +1202,102 @@ textarea { resize: vertical; }
     .figures p { padding-right: 1rem; margin-right: 1rem; }
     .figures strong { font-size: 1.3rem; }
 }
+
+/* ---------- Door camera box (browser) ---------- */
+
+.doorbox {
+    min-height: 100vh;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+}
+
+.doorbox-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.doorbox-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.doorbox-sub { color: var(--muted); }
+
+.doorbox-plate {
+    font-size: 1.6rem;
+    min-width: 5rem;
+    padding: 0.9rem 0.8rem 0.5rem;
+}
+
+.doorbox-plate small { font-size: 0.75rem; }
+
+.doorbox-key {
+    display: grid;
+    gap: 0.9rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    padding: 1.25rem;
+}
+
+.doorbox-class {
+    font-size: 1.05rem;
+    padding: 0.75rem 1rem;
+    background: var(--blue-tint);
+    color: var(--blue-deep);
+    border-radius: var(--radius-s);
+}
+
+.doorbox-frame {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--ink);
+    border-radius: 120px 120px var(--radius-m) var(--radius-m);
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    border: 6px solid var(--blue);
+}
+
+.doorbox-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+.doorbox-start { font-size: 1.05rem; padding: 0.8rem 1.4rem; }
+
+.doorbox-result {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1rem 1.25rem;
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.doorbox-result.ok { background: var(--present); }
+.doorbox-result.ko { background: var(--absent); }
+.doorbox-result small { font-weight: 400; opacity: 0.9; }
+
+.doorbox-help { text-align: center; }
+
+.doorbox-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.doorbox-actions a.btn { text-decoration: none; }
+a.btn { text-decoration: none; display: inline-block; }
