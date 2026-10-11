@@ -51,6 +51,8 @@ For the demo the box runs on a laptop webcam; in production the same script runs
 
 ## Getting started
 
+New to the project? Follow the beginner guide: **[docs/setup-guide.md](docs/setup-guide.md)** (Windows, step by step, with solutions to common problems).
+
 Requirements: **Node.js 18+**, **PostgreSQL**, **Python 3.10+**.
 
 ### 1. Database
