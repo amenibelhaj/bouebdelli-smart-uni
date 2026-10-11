@@ -1,5 +1,7 @@
+import { useEffect } from "react";
+import { api } from "./api";
 import { useAuth } from "./auth";
-import { useRoute } from "./router";
+import { navigate, useRoute } from "./router";
 import Layout from "./components/Layout";
 import { Empty, PageHeader } from "./components/ui";
 
@@ -7,6 +9,7 @@ import Login from "./pages/Login";
 import TimetablePage from "./pages/TimetablePage";
 import AccountPage from "./pages/AccountPage";
 import DoorBox from "./pages/DoorBox";
+import MyFace from "./pages/MyFace";
 
 import StudentHome from "./pages/student/StudentHome";
 import StudentAbsences from "./pages/student/StudentAbsences";
@@ -24,13 +27,15 @@ const ROUTES = {
     student: {
         "/": () => <StudentHome />,
         "/emploi-du-temps": () => <TimetablePage mode="student" />,
-        "/absences": () => <StudentAbsences />
+        "/absences": () => <StudentAbsences />,
+        "/mon-visage": () => <MyFace />
     },
     teacher: {
         "/": () => <TeacherHome />,
         "/emploi-du-temps": () => <TimetablePage mode="teacher" />,
         "/presences": () => <TeacherAttendance />,
-        "/notes": () => <TeacherNotes />
+        "/notes": () => <TeacherNotes />,
+        "/mon-visage": () => <MyFace />
     },
     admin: {
         "/": () => <AdminHome />,
@@ -55,6 +60,24 @@ function NotFound() {
 export default function App() {
     const { user } = useAuth();
     const path = useRoute();
+
+    // First login of a student / teacher without a registered face:
+    // send them once to the "Mon visage" page
+    useEffect(() => {
+        if (!user || !["student", "teacher"].includes(user.role)) return;
+
+        const flag = `smartuni_face_checked_${user.id}`;
+        try {
+            if (sessionStorage.getItem(flag)) return;
+            sessionStorage.setItem(flag, "1");
+        } catch { /* ignore */ }
+
+        api("/auth/face")
+            .then(status => {
+                if (status.available && status.photos === 0) navigate("/mon-visage");
+            })
+            .catch(() => {});
+    }, [user]);
 
     // The door camera page works without logging in (the box uses its own key)
     if (path === "/boitier") {

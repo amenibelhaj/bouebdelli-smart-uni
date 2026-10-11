@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 
 const { User, Student, Teacher, Group } = require("../models");
 const authMiddleware = require("../middleware/auth");
+const ai = require("../services/aiClient");
 
 
 // =========================
@@ -97,6 +98,66 @@ router.get("/me", authMiddleware, async (req, res) => {
 // =========================
 // CHANGE OWN PASSWORD
 // =========================
+
+// =========================
+// MY FACE (students and teachers register their own face once)
+// After SELF_PHOTOS photos, only the admin can change it,
+// so nobody can add a friend's face to their account later.
+// =========================
+
+const SELF_PHOTOS = 3;
+
+router.get("/face", authMiddleware, async (req, res) => {
+
+    if (!["student", "teacher"].includes(req.user.role)) {
+        return res.json({ available: true, photos: 0, needed: 0, can_add: false });
+    }
+
+    try {
+        const faces = await ai.listFaces();
+        const photos = faces[String(req.user.id)] || 0;
+
+        res.json({
+            available: true,
+            photos,
+            needed: SELF_PHOTOS,
+            can_add: photos < SELF_PHOTOS
+        });
+    } catch (error) {
+        // Face service off: the site keeps working, the face page just waits
+        res.json({ available: false, photos: null, needed: SELF_PHOTOS, can_add: false });
+    }
+});
+
+router.post("/face", authMiddleware, async (req, res) => {
+
+    if (!["student", "teacher"].includes(req.user.role)) {
+        return res.status(403).json({ message: "Réservé aux étudiants et aux enseignants" });
+    }
+
+    if (!req.body || !req.body.image) {
+        return res.status(400).json({ message: "Photo manquante" });
+    }
+
+    const faces = await ai.listFaces();
+    const photos = faces[String(req.user.id)] || 0;
+
+    if (photos >= SELF_PHOTOS) {
+        return res.status(403).json({
+            message: "Votre visage est déjà enregistré. Pour le modifier, contactez l'administration."
+        });
+    }
+
+    const result = await ai.enrollFace(req.user.id, req.body.image);
+
+    res.json({
+        message: `Photo ${result.photos} sur ${SELF_PHOTOS} enregistrée`,
+        photos: result.photos,
+        needed: SELF_PHOTOS,
+        can_add: result.photos < SELF_PHOTOS
+    });
+});
+
 
 router.put("/password", authMiddleware, async (req, res) => {
 

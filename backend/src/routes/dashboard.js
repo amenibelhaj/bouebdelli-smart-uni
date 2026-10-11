@@ -18,7 +18,8 @@ const {
 
 const authMiddleware = require("../middleware/auth");
 const roleMiddleware = require("../middleware/role");
-const { toDateString, dayName, timeToMinutes } = require("../utils/time");
+const { toDateString, dayName, timeToMinutes, minutesNow } = require("../utils/time");
+const { expectedPeople } = require("../services/attendance");
 
 
 function rate(present, absent) {
@@ -167,6 +168,52 @@ router.get(
 );
 
 
+// Classes taking place right now, with how many expected people are present
+async function liveClasses() {
+
+    const now = minutesNow();
+
+    const schedules = await Schedule.findAll({
+        where: { day: dayName() },
+        include: [Course, Classroom, Group, { model: Teacher, include: [{ model: User, attributes: ["id", "name"] }] }]
+    });
+
+    const live = schedules
+        .filter(s => timeToMinutes(s.start_time) <= now && now <= timeToMinutes(s.end_time))
+        .sort(byStartTime);
+
+    const today = toDateString();
+    const result = [];
+
+    for (const schedule of live) {
+
+        const people = await expectedPeople(schedule);
+
+        const presentRows = await Attendance.findAll({
+            where: { schedule_id: schedule.id, date: today, status: "present" },
+            attributes: ["user_id"]
+        });
+
+        const present = new Set(presentRows.map(r => r.user_id));
+
+        result.push({
+            id: schedule.id,
+            course: schedule.Course ? schedule.Course.name : null,
+            group: schedule.Group ? schedule.Group.name : null,
+            classroom: schedule.Classroom ? schedule.Classroom.name : null,
+            teacher: schedule.Teacher && schedule.Teacher.User ? schedule.Teacher.User.name : null,
+            start_time: schedule.start_time,
+            end_time: schedule.end_time,
+            students_present: people.students.filter(s => present.has(s.user_id)).length,
+            students_total: people.students.length,
+            teacher_present: Boolean(people.teacher && present.has(people.teacher.user_id))
+        });
+    }
+
+    return result;
+}
+
+
 // =====================================================
 // ADMIN DASHBOARD
 // =====================================================
@@ -266,7 +313,10 @@ router.get(
             nest: true
         });
 
+        const live = await liveClasses();
+
         res.json({
+            live_classes: live,
             statistics: {
                 students,
                 teachers,
@@ -292,6 +342,17 @@ router.get(
                 absences: Number(r.absences)
             }))
         });
+    }
+);
+
+
+// Only the classes happening now (the admin dashboard refreshes this often)
+router.get(
+    "/live",
+    authMiddleware,
+    roleMiddleware("admin"),
+    async (req, res) => {
+        res.json(await liveClasses());
     }
 );
 

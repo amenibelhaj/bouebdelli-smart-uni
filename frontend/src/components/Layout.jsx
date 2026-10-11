@@ -8,13 +8,15 @@ const MENUS = {
     student: [
         ["/", "Accueil"],
         ["/emploi-du-temps", "Emploi du temps"],
-        ["/absences", "Mes absences"]
+        ["/absences", "Mes absences"],
+        ["/mon-visage", "Mon visage"]
     ],
     teacher: [
         ["/", "Accueil"],
         ["/emploi-du-temps", "Emploi du temps"],
         ["/presences", "Présences"],
-        ["/notes", "Mes notes"]
+        ["/notes", "Mes notes"],
+        ["/mon-visage", "Mon visage"]
     ],
     admin: [
         ["/", "Tableau de bord"],

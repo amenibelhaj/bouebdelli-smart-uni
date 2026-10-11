@@ -10,6 +10,7 @@ A camera box is mounted at the door of each classroom. When a student or teacher
 - Weekly timetable: each subject with its time, teacher, classroom and the teacher's notes
 - Notes with deadlines (countdown) and downloadable documents (PDF, Word…)
 - Attendance rate, absences per subject, full history
+- Registers their own face at first login (3 webcam photos, once)
 
 **Teachers**
 - Their timetable as assigned by the administration
@@ -19,6 +20,7 @@ A camera box is mounted at the door of each classroom. When a student or teacher
 **Administration**
 - Manage everything: students, teachers, admins (with account activation), groups, subjects, classrooms, camera boxes
 - Build the timetable per group, with automatic clash detection (group, teacher or room already busy)
+- Classes happening right now highlighted in green, with live counts of students present
 - Register face photos for recognition
 - University-wide presence and absence for students and for teachers, last 7 days, most absent students, full history with filters
 
@@ -111,7 +113,7 @@ All demo accounts use the password `password123`.
 
 ### Try the face recognition
 
-1. Log in as admin → **Utilisateurs** → *Visage* → add 2–3 clear photos of yourself on a student account (e.g. Ameni).
+1. Log in as a student who has no face registered yet: the site opens **Mon visage** and asks for 3 photos with the webcam. (The admin can also add photos in **Utilisateurs** → *Visage*.)
 2. **Emploi du temps** → add a class for that student's group, today, starting now, in room **B6**.
 3. Admin → **Boîtiers caméra** → on the *Caméra porte B6* row, click **Ouvrir la caméra**, then **Démarrer la caméra** (allow the webcam). This page turns your browser into the door camera, no installation needed.
 4. Look at the camera: it shows *Bienvenue … — présence enregistrée*. Log in as the teacher → **Présences**: the student is present, with the recognition score.

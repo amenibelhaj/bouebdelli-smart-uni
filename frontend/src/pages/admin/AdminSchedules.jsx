@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api";
-import { DAY_LABELS, DAYS, hhmm } from "../../format";
+import { DAY_LABELS, DAYS, hhmm, todayName } from "../../format";
 import { Empty, Field, Loader, Modal, PageHeader, useAction, useApi } from "../../components/ui";
 
 
@@ -94,7 +94,26 @@ function ScheduleForm({ entry, groupId, options, onClose, onSaved }) {
 }
 
 
+// Minutes since midnight, updated every 30 s (to light up classes happening now)
+function useNow() {
+    const read = () => new Date().getHours() * 60 + new Date().getMinutes();
+    const [now, setNow] = useState(read);
+
+    useEffect(() => {
+        const timer = setInterval(() => setNow(read()), 30000);
+        return () => clearInterval(timer);
+    }, []);
+
+    return now;
+}
+
+const toMinutes = time => Number(hhmm(time).slice(0, 2)) * 60 + Number(hhmm(time).slice(3, 5));
+
+
 export default function AdminSchedules() {
+    const now = useNow();
+    const today = todayName();
+    const isLive = e => e.day === today && toMinutes(e.start_time) <= now && now <= toMinutes(e.end_time);
     const groups = useApi("/admin/groups");
     const courses = useApi("/admin/courses");
     const classrooms = useApi("/admin/classrooms");
@@ -144,10 +163,16 @@ export default function AdminSchedules() {
                                     <div className="admin-week">
                                         {DAYS.filter(d => entries.some(e => e.day === d)).map(d => (
                                             <section key={d} className="admin-day">
-                                                <h2 className="day-title">{DAY_LABELS[d]}</h2>
+                                                <h2 className="day-title">
+                                                    {DAY_LABELS[d]}
+                                                    {d === today && <span className="today-tag">Aujourd'hui</span>}
+                                                </h2>
                                                 {entries.filter(e => e.day === d).map(e => (
-                                                    <button key={e.id} className="slot" onClick={() => setEditing(e)}>
-                                                        <span className="slot-time">{hhmm(e.start_time)}–{hhmm(e.end_time)}</span>
+                                                    <button key={e.id} className={`slot ${isLive(e) ? "slot-live" : ""}`} onClick={() => setEditing(e)}>
+                                                        <span className="slot-time">
+                                                            {hhmm(e.start_time)}–{hhmm(e.end_time)}
+                                                            {isLive(e) && <span className="live-badge">En cours</span>}
+                                                        </span>
                                                         <strong>{e.Course?.name}</strong>
                                                         <span>{e.Teacher?.User?.name}</span>
                                                         <span className="muted">Salle {e.Classroom?.name}</span>

@@ -1,6 +1,53 @@
+import { useEffect, useState } from "react";
+import { api } from "../../api";
 import { Link } from "../../router";
-import { longDate, percent } from "../../format";
+import { hhmm, longDate, percent } from "../../format";
 import { Empty, Loader, PageHeader, PresenceSummary, useApi } from "../../components/ui";
+
+
+// Classes happening right now, refreshed every 30 seconds
+function LiveClasses({ initial }) {
+    const [classes, setClasses] = useState(initial);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            api("/dashboard/live").then(setClasses).catch(() => {});
+        }, 30000);
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <section className="panel live-panel">
+            <div className="panel-head">
+                <h2><span className="live-dot" aria-hidden="true" /> En cours maintenant</h2>
+                <Link to="/presences" className="text-link">Feuilles de présence</Link>
+            </div>
+
+            {classes.length === 0 ? (
+                <Empty>Aucun cours en ce moment.</Empty>
+            ) : (
+                <div className="live-grid">
+                    {classes.map(c => (
+                        <article key={c.id} className="live-card">
+                            <div className="class-top">
+                                <p className="live-time">{hhmm(c.start_time)}–{hhmm(c.end_time)}</p>
+                                <span className="door-plate live-plate"><small>Salle</small>{c.classroom}</span>
+                            </div>
+                            <h3>{c.course}</h3>
+                            <p className="muted">{c.group} — {c.teacher}</p>
+                            <p className="live-count">
+                                <strong>{c.students_present}</strong> / {c.students_total} étudiants présents
+                            </p>
+                            <p className={c.teacher_present ? "live-teacher ok" : "live-teacher"}>
+                                {c.teacher_present ? "Enseignant présent" : "Enseignant pas encore détecté"}
+                            </p>
+                        </article>
+                    ))}
+                </div>
+            )}
+        </section>
+    );
+}
 
 
 function WeekChart({ days }) {
@@ -47,6 +94,8 @@ export default function AdminHome() {
                                 <Link to="/utilisateurs" className="text-link">Voir les utilisateurs</Link>
                             </p>
                         )}
+
+                        <LiveClasses initial={data.live_classes || []} />
 
                         <div className="figures">
                             <p><strong>{s.students}</strong> étudiants</p>

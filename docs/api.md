@@ -14,6 +14,8 @@ Errors always look like `{ "message": "..." }` (in French, ready to display).
 | POST | `/auth/login` | anyone | `{ email, password }` → `{ token, user }`. Account must be `active`. |
 | GET | `/auth/me` | logged in | Current user with student / teacher profile |
 | PUT | `/auth/password` | logged in | `{ current_password, new_password }` |
+| GET | `/auth/face` | student, teacher | `{ available, photos, needed, can_add }` — is my face registered? |
+| POST | `/auth/face` | student, teacher | `{ image }` — register my own face, up to 3 photos, once (then only the admin can reset it) |
 
 ## Timetable
 
@@ -53,7 +55,8 @@ Errors always look like `{ "message": "..." }` (in French, ready to display).
 |---|---|---|
 | GET | `/dashboard/student` | student — attendance rate, absences per subject, today's classes, upcoming deadlines |
 | GET | `/dashboard/teacher` | teacher — classes, today, students' and own attendance |
-| GET | `/dashboard/admin` | admin — counts, student and teacher presence (total and today), last 7 days, most absent students |
+| GET | `/dashboard/admin` | admin — classes happening now, counts, student and teacher presence (total and today), last 7 days, most absent students |
+| GET | `/dashboard/live` | admin — classes happening now with students present / expected and whether the teacher is there |
 
 ## Administration (admin only)
 
